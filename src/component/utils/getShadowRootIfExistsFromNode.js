@@ -12,7 +12,7 @@
 /**
  * Loop through parent nodes and check for a ShadowRoot object
  */
-function getShadowRootIfExistsFromNode(node: ?node): any {
+function getShadowRootIfExistsFromNode(node: ?Node): Node | null {
   if (!node) {
     return null;
   }

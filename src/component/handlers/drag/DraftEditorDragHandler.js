@@ -19,7 +19,7 @@ const DraftModifier = require('DraftModifier');
 const EditorState = require('EditorState');
 
 const findAncestorOffsetKey = require('findAncestorOffsetKey');
-const getCorrectDocumentFromNode = require('getCorrectDocumentFromNode');
+const getCorrectDocumentOrShadowRootFromNode = require('getCorrectDocumentOrShadowRootFromNode');
 const getTextContentFromFiles = require('getTextContentFromFiles');
 const getUpdatedSelectionState = require('getUpdatedSelectionState');
 const getWindowForNode = require('getWindowForNode');
@@ -36,9 +36,8 @@ function getSelectionForEvent(
   let node: ?Node = null;
   let offset: ?number = null;
 
-  const eventTargetDocument = getCorrectDocumentFromNode(
+  const eventTargetDocument = getCorrectDocumentOrShadowRootFromNode(
     event.currentTarget,
-    true,
   );
   /* $FlowFixMe[prop-missing] (>=0.68.0 site=www,mobile) This comment
    * suppresses an error found when Flow v0.68 was deployed. To see the error

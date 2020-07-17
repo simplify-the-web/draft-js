@@ -9,11 +9,17 @@
  * @emails oncall+draft_js
  */
 
-function getCorrectDocumentFromNode(node: ?Node): Document {
+const getShadowRootIfExistsFromNode = require('getShadowRootIfExistsFromNode');
+
+function getCorrectDocumentOrShadowRootFromNode(node: ?Node): Node {
+  const shadowRoot = getShadowRootIfExistsFromNode(node);
+  if (shadowRoot) {
+    return shadowRoot;
+  }
   if (!node || !node.ownerDocument) {
     return document;
   }
   return node.ownerDocument;
 }
 
-module.exports = getCorrectDocumentFromNode;
+module.exports = getCorrectDocumentOrShadowRootFromNode;

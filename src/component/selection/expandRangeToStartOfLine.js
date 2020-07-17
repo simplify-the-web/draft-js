@@ -11,7 +11,7 @@
 
 const UnicodeUtils = require('UnicodeUtils');
 
-const getCorrectDocumentFromNode = require('getCorrectDocumentFromNode');
+const getCorrectDocumentOrShadowRootFromNode = require('getCorrectDocumentOrShadowRootFromNode');
 const getRangeClientRects = require('getRangeClientRects');
 const invariant = require('invariant');
 /**
@@ -19,7 +19,7 @@ const invariant = require('invariant');
  */
 function getLineHeightPx(element: Element): number {
   const computed = getComputedStyle(element);
-  const correctDocument = getCorrectDocumentFromNode(element, true);
+  const correctDocument = getCorrectDocumentOrShadowRootFromNode(element);
   const div = correctDocument.createElement('div');
   div.style.fontFamily = computed.fontFamily;
   div.style.fontSize = computed.fontSize;

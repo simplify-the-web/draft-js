@@ -21,6 +21,7 @@ const UserAgent = require('UserAgent');
 const containsNode = require('containsNode');
 const getActiveElement = require('getActiveElement');
 const getCorrectDocumentFromNode = require('getCorrectDocumentFromNode');
+const getCorrectDocumentOrShadowRootFromNode = require('getCorrectDocumentOrShadowRootFromNode');
 const invariant = require('invariant');
 const isElement = require('isElement');
 
@@ -55,7 +56,7 @@ function anonymizeTextWithin(
 
   if (node.nodeType === Node.TEXT_NODE) {
     const length = node.textContent.length;
-    return getCorrectDocumentFromNode(node, true).createTextNode(
+    return getCorrectDocumentOrShadowRootFromNode(node).createTextNode(
       '[text ' +
         length +
         (labels.length ? ' | ' + labels.join(', ') : '') +
@@ -121,21 +122,20 @@ function setDraftEditorSelection(
   // our selection code doesn't know it yet. Forcing selection in
   // this case may lead to errors, so just bail now.
 
-  const documentObject = getCorrectDocumentFromNode(node, true);
-  if (
-    !containsNode(
-      documentObject.documentElement
-        ? documentObject.documentElement
-        : documentObject,
-      node,
-    )
-  ) {
+  const documentObject = getCorrectDocumentOrShadowRootFromNode(node);
+  // If the documentObject is a shadowRoot then it will not contain a documentElement
+  const documentElement = documentObject.documentElement
+    ? documentObject.documentElement
+    : documentObject;
+  if (!containsNode(documentElement, node)) {
     return;
   }
 
-  const selection: SelectionObject = documentObject.defaultView
-    ? documentObject.defaultView.getSelection()
-    : documentObject.getSelection();
+  // If the documentObject is a shadowRoot then it will not contain a defaultView
+  const defaultView = documentObject.defaultView
+    ? documentObject.defaultView
+    : documentObject;
+  const selection: SelectionObject = defaultView.getSelection();
   let anchorKey = selectionState.getAnchorKey();
   let anchorOffset = selectionState.getAnchorOffset();
   let focusKey = selectionState.getFocusKey();
@@ -342,7 +342,7 @@ function addPointToSelection(
   offset: number,
   selectionState: SelectionState,
 ): void {
-  const range = getCorrectDocumentFromNode(node, false).createRange();
+  const range = getCorrectDocumentFromNode(node).createRange();
   // logging to catch bug that is being reported in t16250795
   if (offset > getNodeLength(node)) {
     // in this case we know that the call to 'range.setStart' is about to throw
