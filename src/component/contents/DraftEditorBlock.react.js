@@ -20,6 +20,11 @@ import type SelectionState from 'SelectionState';
 import type {BidiDirection} from 'UnicodeBidiDirection';
 import type {List} from 'immutable';
 
+const getShadowRootIfExistsFromNode = require('getShadowRootIfExistsFromNode');
+const getCorrectDocumentOrShadowRootFromNode = require('getCorrectDocumentOrShadowRootFromNode');
+const getDocumentScrollElement = require('getDocumentScrollElement');
+const getUnboundedScrollPosition = require('getUnboundedScrollPosition');
+
 const DraftEditorLeaf = require('DraftEditorLeaf.react');
 const DraftOffsetKey = require('DraftOffsetKey');
 const React = require('React');
@@ -30,11 +35,60 @@ const UnicodeBidiDirection = require('UnicodeBidiDirection');
 
 const cx = require('cx');
 const getElementPosition = require('getElementPosition');
-const getScrollPosition = require('getScrollPosition');
+// const getScrollPosition = require('getScrollPosition');
 const getViewportDimensions = require('getViewportDimensions');
 const invariant = require('invariant');
 const isHTMLElement = require('isHTMLElement');
 const nullthrows = require('nullthrows');
+
+function getScrollPosition(scrollable) {
+  const documentScrollElement = getDocumentScrollElement(
+    scrollable.ownerDocument || scrollable.document,
+  );
+  const shadowRoot = getShadowRootIfExistsFromNode(scrollable);
+  if (shadowRoot) {
+    scrollable = shadowRoot;
+  } else if (scrollable.Window && scrollable instanceof scrollable.Window) {
+    scrollable = documentScrollElement;
+  }
+  const scrollPosition = getUnboundedScrollPosition(scrollable);
+
+  const viewport =
+    scrollable === documentScrollElement
+      ? scrollable.ownerDocument.documentElement
+      : scrollable;
+
+  const xMax = scrollable.scrollWidth - viewport.clientWidth;
+  const yMax = scrollable.scrollHeight - viewport.clientHeight;
+
+  scrollPosition.x = Math.max(0, Math.min(scrollPosition.x, xMax));
+  scrollPosition.y = Math.max(0, Math.min(scrollPosition.y, yMax));
+
+  return scrollPosition;
+}
+
+function getScrollParent(node) {
+  if (!node) {
+    return null;
+  }
+
+  const parent = getCorrectDocumentOrShadowRootFromNode(node);
+  const parentNode = parent.body ? parent.body : parent;
+
+  while (node && node !== parentNode) {
+    if (
+      node.style.overflow === 'scroll' ||
+      node.style.overflowY === 'scroll' ||
+      node.style.overflowX === 'scroll'
+    ) {
+      return node;
+    }
+
+    node = node.parentNode;
+  }
+
+  return document.defaultView || document.parentWindow;
+}
 
 const SCROLL_BUFFER = 10;
 
@@ -111,7 +165,7 @@ class DraftEditorBlock extends React.Component<Props> {
     if (blockNode == null) {
       return;
     }
-    const scrollParent = Style.getScrollParent(blockNode);
+    const scrollParent = getScrollParent(blockNode);
     const scrollPosition = getScrollPosition(scrollParent);
     let scrollDelta;
 
