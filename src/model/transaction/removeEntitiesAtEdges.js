@@ -54,7 +54,8 @@ function removeEntitiesAtEdges(
   }
 
   if (!Object.keys(updatedBlocks).length) {
-    return contentState.set('selectionAfter', selectionState);
+    const contentNew = contentState.set('selectionAfter', selectionState);
+    return contentNew;
   }
 
   return contentState.merge({

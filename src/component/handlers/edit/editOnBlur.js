@@ -18,6 +18,7 @@ const EditorState = require('EditorState');
 
 const containsNode = require('containsNode');
 const getActiveElement = require('getActiveElement');
+const getShadowRootIfExistsFromNode = require('getShadowRootIfExistsFromNode');
 
 function editOnBlur(editor: DraftEditor, e: SyntheticEvent<HTMLElement>): void {
   // In a contentEditable element, when you select a range and then click
@@ -28,14 +29,19 @@ function editOnBlur(editor: DraftEditor, e: SyntheticEvent<HTMLElement>): void {
   // We therefore force the issue to be certain, checking whether the active
   // element is `body` to force it when blurring occurs within the window (as
   // opposed to clicking to another tab or window).
-  const {ownerDocument} = e.currentTarget;
+  const {currentTarget} = e;
+  const {ownerDocument} = currentTarget;
+  const shadowRoot = getShadowRootIfExistsFromNode(currentTarget);
+  const elementNode = shadowRoot || ownerDocument;
   if (
     // This ESLint rule conflicts with `sketchy-null-bool` flow check
     // eslint-disable-next-line no-extra-boolean-cast
     !Boolean(editor.props.preserveSelectionOnBlur) &&
-    getActiveElement(ownerDocument) === ownerDocument.body
+    getActiveElement(elementNode) === ownerDocument.body
   ) {
-    const selection: SelectionObject = ownerDocument.defaultView.getSelection();
+    const selection: SelectionObject = shadowRoot
+      ? shadowRoot.getSelection()
+      : ownerDocument.defaultView.getSelection();
     const editorNode = editor.editor;
     if (
       selection.rangeCount === 1 &&

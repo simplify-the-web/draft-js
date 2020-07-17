@@ -36,7 +36,10 @@ function getSelectionForEvent(
   let node: ?Node = null;
   let offset: ?number = null;
 
-  const eventTargetDocument = getCorrectDocumentFromNode(event.currentTarget);
+  const eventTargetDocument = getCorrectDocumentFromNode(
+    event.currentTarget,
+    true,
+  );
   /* $FlowFixMe[prop-missing] (>=0.68.0 site=www,mobile) This comment
    * suppresses an error found when Flow v0.68 was deployed. To see the error
    * delete this comment and run Flow. */

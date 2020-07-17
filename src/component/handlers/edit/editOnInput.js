@@ -21,6 +21,7 @@ const UserAgent = require('UserAgent');
 
 const {notEmptyKey} = require('draftKeyUtils');
 const findAncestorOffsetKey = require('findAncestorOffsetKey');
+const getShadowRootIfExistsFromNode = require('getShadowRootIfExistsFromNode');
 const keyCommandPlainBackspace = require('keyCommandPlainBackspace');
 const nullthrows = require('nullthrows');
 
@@ -66,7 +67,10 @@ function editOnInput(editor: DraftEditor, e: SyntheticInputEvent<>): void {
   }
   // at this point editor is not null for sure (after input)
   const castedEditorElement: HTMLElement = (editor.editor: any);
-  const domSelection: SelectionObject = castedEditorElement.ownerDocument.defaultView.getSelection();
+  const shadowRoot = getShadowRootIfExistsFromNode(castedEditorElement);
+  const domSelection: SelectionObject = shadowRoot
+    ? shadowRoot.getSelection()
+    : castedEditorElement.ownerDocument.defaultView.getSelection();
 
   const {anchorNode, isCollapsed} = domSelection;
   const isNotTextOrElementNode =

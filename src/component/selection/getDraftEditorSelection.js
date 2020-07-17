@@ -16,6 +16,7 @@ import type {SelectionObject} from 'DraftDOMTypes';
 import type EditorState from 'EditorState';
 
 const getDraftEditorSelectionWithNodes = require('getDraftEditorSelectionWithNodes');
+const getShadowRootIfExistsFromNode = require('getShadowRootIfExistsFromNode');
 
 /**
  * Convert the current selection range to an anchor/focus pair of offset keys
@@ -25,7 +26,10 @@ function getDraftEditorSelection(
   editorState: EditorState,
   root: HTMLElement,
 ): DOMDerivedSelection {
-  const selection: SelectionObject = root.ownerDocument.defaultView.getSelection();
+  const shadowRoot = getShadowRootIfExistsFromNode(root);
+  const selection: SelectionObject = shadowRoot
+    ? shadowRoot.getSelection()
+    : root.ownerDocument.defaultView.getSelection();
   const {
     anchorNode,
     anchorOffset,

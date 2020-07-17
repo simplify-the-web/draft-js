@@ -17,6 +17,7 @@ const EditorState = require('EditorState');
 
 const expandRangeToStartOfLine = require('expandRangeToStartOfLine');
 const getDraftEditorSelectionWithNodes = require('getDraftEditorSelectionWithNodes');
+const getShadowRootIfExistsFromNode = require('getShadowRootIfExistsFromNode');
 const moveSelectionBackward = require('moveSelectionBackward');
 const removeTextWithStrategy = require('removeTextWithStrategy');
 
@@ -31,8 +32,12 @@ function keyCommandBackspaceToStartOfLine(
       if (selection.isCollapsed() && selection.getAnchorOffset() === 0) {
         return moveSelectionBackward(strategyState, 1);
       }
-      const {ownerDocument} = e.currentTarget;
-      const domSelection: SelectionObject = ownerDocument.defaultView.getSelection();
+      const {currentTarget} = e;
+      const {ownerDocument} = currentTarget;
+      const shadowRoot = getShadowRootIfExistsFromNode(currentTarget);
+      const domSelection: SelectionObject = shadowRoot
+        ? shadowRoot.getSelection()
+        : ownerDocument.defaultView.getSelection();
       // getRangeAt can technically throw if there's no selection, but we know
       // there is one here because text editor has focus (the cursor is a
       // selection of length 0). Therefore, we don't need to wrap this in a

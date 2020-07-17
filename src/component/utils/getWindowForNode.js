@@ -9,7 +9,13 @@
  * @emails oncall+draft_js
  */
 
+const getShadowRootIfExistsFromNode = require('getShadowRootIfExistsFromNode');
+
 function getWindowForNode(node: ?Node): any {
+  const shadowRoot = getShadowRootIfExistsFromNode(node);
+  if (shadowRoot) {
+    return shadowRoot;
+  }
   if (!node || !node.ownerDocument || !node.ownerDocument.defaultView) {
     return window;
   }

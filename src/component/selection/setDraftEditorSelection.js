@@ -55,7 +55,7 @@ function anonymizeTextWithin(
 
   if (node.nodeType === Node.TEXT_NODE) {
     const length = node.textContent.length;
-    return getCorrectDocumentFromNode(node).createTextNode(
+    return getCorrectDocumentFromNode(node, true).createTextNode(
       '[text ' +
         length +
         (labels.length ? ' | ' + labels.join(', ') : '') +
@@ -120,12 +120,22 @@ function setDraftEditorSelection(
   // It's possible that the editor has been removed from the DOM but
   // our selection code doesn't know it yet. Forcing selection in
   // this case may lead to errors, so just bail now.
-  const documentObject = getCorrectDocumentFromNode(node);
-  if (!containsNode(documentObject.documentElement, node)) {
+
+  const documentObject = getCorrectDocumentFromNode(node, true);
+  if (
+    !containsNode(
+      documentObject.documentElement
+        ? documentObject.documentElement
+        : documentObject,
+      node,
+    )
+  ) {
     return;
   }
 
-  const selection: SelectionObject = documentObject.defaultView.getSelection();
+  const selection: SelectionObject = documentObject.defaultView
+    ? documentObject.defaultView.getSelection()
+    : documentObject.getSelection();
   let anchorKey = selectionState.getAnchorKey();
   let anchorOffset = selectionState.getAnchorOffset();
   let focusKey = selectionState.getFocusKey();
@@ -332,7 +342,7 @@ function addPointToSelection(
   offset: number,
   selectionState: SelectionState,
 ): void {
-  const range = getCorrectDocumentFromNode(node).createRange();
+  const range = getCorrectDocumentFromNode(node, false).createRange();
   // logging to catch bug that is being reported in t16250795
   if (offset > getNodeLength(node)) {
     // in this case we know that the call to 'range.setStart' is about to throw

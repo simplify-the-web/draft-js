@@ -19,7 +19,7 @@ const invariant = require('invariant');
  */
 function getLineHeightPx(element: Element): number {
   const computed = getComputedStyle(element);
-  const correctDocument = getCorrectDocumentFromNode(element);
+  const correctDocument = getCorrectDocumentFromNode(element, true);
   const div = correctDocument.createElement('div');
   div.style.fontFamily = computed.fontFamily;
   div.style.fontSize = computed.fontSize;
