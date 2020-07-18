@@ -35,64 +35,12 @@ const UserAgent = require('UserAgent');
 const cx = require('cx');
 const generateRandomKey = require('generateRandomKey');
 const getDefaultKeyBinding = require('getDefaultKeyBinding');
-const getShadowRootIfExistsFromNode = require('getShadowRootIfExistsFromNode');
-const getCorrectDocumentOrShadowRootFromNode = require('getCorrectDocumentOrShadowRootFromNode');
-const getDocumentScrollElement = require('getDocumentScrollElement');
-const getUnboundedScrollPosition = require('getUnboundedScrollPosition');
+const getScrollPosition = require('getScrollPosition');
+const getShadowRootScrollParent = require('getShadowRootScrollParent');
 const gkx = require('gkx');
 const invariant = require('invariant');
 const isHTMLElement = require('isHTMLElement');
 const nullthrows = require('nullthrows');
-
-function getScrollPosition(scrollable) {
-  const documentScrollElement = getDocumentScrollElement(
-    scrollable.ownerDocument || scrollable.document,
-  );
-  const shadowRoot = getShadowRootIfExistsFromNode(scrollable);
-  if (shadowRoot) {
-    scrollable = shadowRoot;
-  } else if (scrollable.Window && scrollable instanceof scrollable.Window) {
-    scrollable = documentScrollElement;
-  }
-  const scrollPosition = getUnboundedScrollPosition(scrollable);
-
-  const viewport =
-    scrollable === documentScrollElement
-      ? scrollable.ownerDocument.documentElement
-      : scrollable;
-
-  const xMax = scrollable.scrollWidth - viewport.clientWidth;
-  const yMax = scrollable.scrollHeight - viewport.clientHeight;
-
-  scrollPosition.x = Math.max(0, Math.min(scrollPosition.x, xMax));
-  scrollPosition.y = Math.max(0, Math.min(scrollPosition.y, yMax));
-
-  return scrollPosition;
-}
-
-function getScrollParent(node) {
-  if (!node) {
-    return null;
-  }
-
-  const parent = getCorrectDocumentOrShadowRootFromNode(node);
-  const parentNode = parent.body ? parent.body : parent;
-
-  while (node && node !== parentNode) {
-    if (
-      node.style.overflow === 'scroll' ||
-      node.style.overflowY === 'scroll' ||
-      node.style.overflowX === 'scroll'
-    ) {
-      return node;
-    }
-
-    node = node.parentNode;
-  }
-
-  return document.defaultView || document.parentWindow;
-}
-
 const isIE = UserAgent.isBrowser('IE');
 
 // IE does not support the `input` event on contentEditable, so we can't
@@ -196,6 +144,7 @@ class DraftEditor extends React.Component<DraftEditorProps, State> {
     },
     keyBindingFn: getDefaultKeyBinding,
     readOnly: false,
+    shadowRootSelector: null,
     spellCheck: false,
     stripPastedStyles: false,
   };
@@ -323,9 +272,11 @@ class DraftEditor extends React.Component<DraftEditorProps, State> {
         const method = this._handler && this._handler[eventName];
         if (method) {
           if (flushControlled) {
-            flushControlled(() => method(this, e));
+            flushControlled(() =>
+              method(this, e, this.props.shadowRootSelector),
+            );
           } else {
-            method(this, e);
+            method(this, e, this.props.shadowRootSelector);
           }
         }
       }
@@ -393,6 +344,7 @@ class DraftEditor extends React.Component<DraftEditorProps, State> {
       editorState,
       preventScroll,
       readOnly,
+      shadowRootSelector,
       textAlignment,
       textDirectionality,
     } = this.props;
@@ -434,6 +386,7 @@ class DraftEditor extends React.Component<DraftEditorProps, State> {
       editorKey: this._editorKey,
       editorState,
       preventScroll,
+      shadowRootSelector,
       textDirectionality,
     };
 
@@ -554,7 +507,7 @@ class DraftEditor extends React.Component<DraftEditorProps, State> {
   focus: (scrollPosition?: DraftScrollPosition) => void = (
     scrollPosition?: DraftScrollPosition,
   ): void => {
-    const {editorState} = this.props;
+    const {editorState, shadowRootSelector} = this.props;
     const alreadyHasFocus = editorState.getSelection().getHasFocus();
     const editorNode = this.editor;
 
@@ -564,8 +517,19 @@ class DraftEditor extends React.Component<DraftEditorProps, State> {
       return;
     }
 
-    const scrollParent = getScrollParent(editorNode);
-    const {x, y} = scrollPosition || getScrollPosition(scrollParent);
+    // If shadowRootSelector exists then a different function has to be used for finding
+    // scroll parent and position because window and document can't be queried
+    let scrollParent;
+    let scrollParentScrollPosition;
+    if (shadowRootSelector) {
+      scrollParent = getShadowRootScrollParent(editorNode, shadowRootSelector);
+      scrollParentScrollPosition = getScrollPosition(scrollParent);
+    } else {
+      scrollParent = Style.getScrollParent(editorNode);
+      scrollParentScrollPosition = getScrollPosition(scrollParent);
+    }
+
+    const {x, y} = scrollPosition || scrollParentScrollPosition;
 
     invariant(isHTMLElement(editorNode), 'editorNode is not an HTMLElement');
 

@@ -19,7 +19,11 @@ const EditorState = require('EditorState');
 const getContentEditableContainer = require('getContentEditableContainer');
 const getDraftEditorSelection = require('getDraftEditorSelection');
 
-function editOnSelect(editor: DraftEditor): void {
+function editOnSelect(
+  editor: DraftEditor,
+  _,
+  shadowRootSelector: string | null,
+): void {
   if (
     editor._blockSelectEvents ||
     editor._latestEditorState !== editor.props.editorState
@@ -41,6 +45,7 @@ function editOnSelect(editor: DraftEditor): void {
   const documentSelection = getDraftEditorSelection(
     editorState,
     getContentEditableContainer(editor),
+    shadowRootSelector,
   );
   const updatedSelectionState = documentSelection.selectionState;
 

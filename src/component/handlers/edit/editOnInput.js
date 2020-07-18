@@ -21,7 +21,6 @@ const UserAgent = require('UserAgent');
 
 const {notEmptyKey} = require('draftKeyUtils');
 const findAncestorOffsetKey = require('findAncestorOffsetKey');
-const getShadowRootIfExistsFromNode = require('getShadowRootIfExistsFromNode');
 const keyCommandPlainBackspace = require('keyCommandPlainBackspace');
 const nullthrows = require('nullthrows');
 
@@ -60,17 +59,25 @@ function onInputType(inputType: string, editorState: EditorState): EditorState {
  * when an `input` change leads to a DOM/model mismatch, the change should be
  * due to a spellcheck change, and we can incorporate it into our model.
  */
-function editOnInput(editor: DraftEditor, e: SyntheticInputEvent<>): void {
+function editOnInput(
+  editor: DraftEditor,
+  e: SyntheticInputEvent<>,
+  shadowRootSelector: string | null,
+): void {
   if (editor._pendingStateFromBeforeInput !== undefined) {
     editor.update(editor._pendingStateFromBeforeInput);
     editor._pendingStateFromBeforeInput = undefined;
   }
   // at this point editor is not null for sure (after input)
   const castedEditorElement: HTMLElement = (editor.editor: any);
-  const shadowRoot = getShadowRootIfExistsFromNode(castedEditorElement);
-  const domSelection: SelectionObject = shadowRoot
-    ? shadowRoot.getSelection()
-    : castedEditorElement.ownerDocument.defaultView.getSelection();
+  let domSelection;
+  if (shadowRootSelector) {
+    domSelection = document
+      .querySelector(shadowRootSelector)
+      .shadowRoot.getSelection();
+  } else {
+    castedEditorElement.ownerDocument.defaultView.getSelection();
+  }
 
   const {anchorNode, isCollapsed} = domSelection;
   const isNotTextOrElementNode =
@@ -109,7 +116,9 @@ function editOnInput(editor: DraftEditor, e: SyntheticInputEvent<>): void {
 
   let domText = anchorNode.textContent;
   const editorState = editor._latestEditorState;
-  const offsetKey = nullthrows(findAncestorOffsetKey(anchorNode));
+  const offsetKey = nullthrows(
+    findAncestorOffsetKey(anchorNode, shadowRootSelector),
+  );
   const {blockKey, decoratorKey, leafKey} = DraftOffsetKey.decode(offsetKey);
 
   const {start, end} = editorState

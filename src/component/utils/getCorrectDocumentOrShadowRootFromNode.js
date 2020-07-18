@@ -9,12 +9,12 @@
  * @emails oncall+draft_js
  */
 
-const getShadowRootIfExistsFromNode = require('getShadowRootIfExistsFromNode');
-
-function getCorrectDocumentOrShadowRootFromNode(node: ?Node): Node {
-  const shadowRoot = getShadowRootIfExistsFromNode(node);
-  if (shadowRoot) {
-    return shadowRoot;
+function getCorrectDocumentOrShadowRootFromNode(
+  node: ?Node,
+  shadowRootSelector: string | null,
+): Node {
+  if (shadowRootSelector) {
+    return document.querySelector(shadowRootSelector).shadowRoot;
   }
   if (!node || !node.ownerDocument) {
     return document;

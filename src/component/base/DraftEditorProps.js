@@ -189,5 +189,6 @@ export type DraftEditorDefaultProps = {
   readOnly: boolean,
   spellCheck: boolean,
   stripPastedStyles: boolean,
+  shadowRootSelector: string | null,
   ...
 };

@@ -35,7 +35,11 @@ function getAnonymizedDOM(
     return '[empty]';
   }
 
-  const anonymized = anonymizeTextWithin(node, getNodeLabels);
+  const anonymized = anonymizeTextWithin(
+    node,
+    shadowRootSelector,
+    getNodeLabels,
+  );
   if (anonymized.nodeType === Node.TEXT_NODE) {
     return anonymized.textContent;
   }
@@ -50,13 +54,17 @@ function getAnonymizedDOM(
 
 function anonymizeTextWithin(
   node: Node,
+  shadowRootSelector: string | null,
   getNodeLabels?: (n: Node) => Array<string>,
 ): Node {
   const labels = getNodeLabels !== undefined ? getNodeLabels(node) : [];
 
   if (node.nodeType === Node.TEXT_NODE) {
     const length = node.textContent.length;
-    return getCorrectDocumentOrShadowRootFromNode(node).createTextNode(
+    return getCorrectDocumentOrShadowRootFromNode(
+      node,
+      shadowRootSelector,
+    ).createTextNode(
       '[text ' +
         length +
         (labels.length ? ' | ' + labels.join(', ') : '') +
@@ -70,7 +78,9 @@ function anonymizeTextWithin(
   }
   const childNodes = node.childNodes;
   for (let ii = 0; ii < childNodes.length; ii++) {
-    clone.appendChild(anonymizeTextWithin(childNodes[ii], getNodeLabels));
+    clone.appendChild(
+      anonymizeTextWithin(childNodes[ii], shadowRootSelector, getNodeLabels),
+    );
   }
 
   return clone;
@@ -78,6 +88,7 @@ function anonymizeTextWithin(
 
 function getAnonymizedEditorDOM(
   node: Node,
+  shadowRootSelector: string | null,
   getNodeLabels?: (n: Node) => Array<string>,
 ): string {
   // grabbing the DOM content of the Draft editor
@@ -87,7 +98,7 @@ function getAnonymizedEditorDOM(
   while (currentNode) {
     if (isElement(currentNode) && castedNode.hasAttribute('contenteditable')) {
       // found the Draft editor container
-      return getAnonymizedDOM(currentNode, getNodeLabels);
+      return getAnonymizedDOM(currentNode, shadowRootSelector, getNodeLabels);
     } else {
       currentNode = currentNode.parentNode;
       castedNode = (currentNode: any);
@@ -117,12 +128,16 @@ function setDraftEditorSelection(
   blockKey: string,
   nodeStart: number,
   nodeEnd: number,
+  shadowRootSelector: string | null,
 ): void {
   // It's possible that the editor has been removed from the DOM but
   // our selection code doesn't know it yet. Forcing selection in
   // this case may lead to errors, so just bail now.
 
-  const documentObject = getCorrectDocumentOrShadowRootFromNode(node);
+  const documentObject = getCorrectDocumentOrShadowRootFromNode(
+    node,
+    shadowRootSelector,
+  );
   // If the documentObject is a shadowRoot then it will not contain a documentElement
   const documentElement = documentObject.documentElement
     ? documentObject.documentElement
@@ -170,12 +185,14 @@ function setDraftEditorSelection(
       node,
       anchorOffset - nodeStart,
       selectionState,
+      shadowRootSelector,
     );
     addFocusToSelection(
       selection,
       node,
       focusOffset - nodeStart,
       selectionState,
+      shadowRootSelector,
     );
     return;
   }
@@ -189,6 +206,7 @@ function setDraftEditorSelection(
         node,
         anchorOffset - nodeStart,
         selectionState,
+        shadowRootSelector,
       );
     }
 
@@ -201,6 +219,7 @@ function setDraftEditorSelection(
         node,
         focusOffset - nodeStart,
         selectionState,
+        shadowRootSelector,
       );
     }
   } else {
@@ -214,6 +233,7 @@ function setDraftEditorSelection(
         node,
         focusOffset - nodeStart,
         selectionState,
+        shadowRootSelector,
       );
     }
 
@@ -231,12 +251,14 @@ function setDraftEditorSelection(
         node,
         anchorOffset - nodeStart,
         selectionState,
+        shadowRootSelector,
       );
       addFocusToSelection(
         selection,
         storedFocusNode,
         storedFocusOffset,
         selectionState,
+        shadowRootSelector,
       );
     }
   }
@@ -250,6 +272,7 @@ function addFocusToSelection(
   node: ?Node,
   offset: number,
   selectionState: SelectionState,
+  shadowRootSelector: string | null,
 ): void {
   const activeElement = getActiveElement();
   const extend = selection.extend;
@@ -266,7 +289,7 @@ function addFocusToSelection(
     if (offset > getNodeLength(node)) {
       // the call to 'selection.extend' is about to throw
       DraftJsDebugLogging.logSelectionStateFailure({
-        anonymizedDom: getAnonymizedEditorDOM(node),
+        anonymizedDom: getAnonymizedEditorDOM(node, shadowRootSelector),
         extraParams: JSON.stringify({offset}),
         selectionState: JSON.stringify(selectionState.toJS()),
       });
@@ -283,19 +306,23 @@ function addFocusToSelection(
       }
     } catch (e) {
       DraftJsDebugLogging.logSelectionStateFailure({
-        anonymizedDom: getAnonymizedEditorDOM(node, function(n) {
-          const labels = [];
-          if (n === activeElement) {
-            labels.push('active element');
-          }
-          if (n === selection.anchorNode) {
-            labels.push('selection anchor node');
-          }
-          if (n === selection.focusNode) {
-            labels.push('selection focus node');
-          }
-          return labels;
-        }),
+        anonymizedDom: getAnonymizedEditorDOM(
+          node,
+          shadowRootSelector,
+          function(n) {
+            const labels = [];
+            if (n === activeElement) {
+              labels.push('active element');
+            }
+            if (n === selection.anchorNode) {
+              labels.push('selection anchor node');
+            }
+            if (n === selection.focusNode) {
+              labels.push('selection focus node');
+            }
+            return labels;
+          },
+        ),
         extraParams: JSON.stringify(
           {
             activeElementName: activeElement ? activeElement.nodeName : null,
@@ -341,13 +368,14 @@ function addPointToSelection(
   node: Node,
   offset: number,
   selectionState: SelectionState,
+  shadowRootSelector: string | null,
 ): void {
   const range = getCorrectDocumentFromNode(node).createRange();
   // logging to catch bug that is being reported in t16250795
   if (offset > getNodeLength(node)) {
     // in this case we know that the call to 'range.setStart' is about to throw
     DraftJsDebugLogging.logSelectionStateFailure({
-      anonymizedDom: getAnonymizedEditorDOM(node),
+      anonymizedDom: getAnonymizedEditorDOM(node, shadowRootSelector),
       extraParams: JSON.stringify({offset}),
       selectionState: JSON.stringify(selectionState.toJS()),
     });

@@ -47,10 +47,10 @@ class DOMObserver {
     ...
   }) => void;
 
-  constructor(container: HTMLElement) {
+  constructor(container: HTMLElement, shadowRootSelector: string | null) {
     this.container = container;
     this.mutations = Map();
-    const containerWindow = getWindowForNode(container);
+    const containerWindow = getWindowForNode(container, shadowRootSelector);
     if (containerWindow.MutationObserver && !USE_CHAR_DATA) {
       this.observer = new containerWindow.MutationObserver(mutations =>
         this.registerMutations(mutations),

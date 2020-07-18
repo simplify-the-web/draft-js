@@ -78,7 +78,7 @@ class DraftEditorLeaf extends React.Component<Props> {
   leaf: ?HTMLElement;
 
   _setSelection(): void {
-    const {selection} = this.props;
+    const {selection, shadowRootSelector} = this.props;
 
     // If selection state is irrelevant to the parent block, no-op.
     if (selection == null || !selection.getHasFocus()) {
@@ -110,7 +110,14 @@ class DraftEditorLeaf extends React.Component<Props> {
       invariant(targetNode, 'Missing targetNode');
     }
 
-    setDraftEditorSelection(selection, targetNode, blockKey, start, end);
+    setDraftEditorSelection(
+      selection,
+      targetNode,
+      blockKey,
+      start,
+      end,
+      shadowRootSelector,
+    );
   }
 
   shouldComponentUpdate(nextProps: Props): boolean {

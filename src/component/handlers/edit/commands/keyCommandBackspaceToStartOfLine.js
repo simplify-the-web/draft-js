@@ -17,13 +17,13 @@ const EditorState = require('EditorState');
 
 const expandRangeToStartOfLine = require('expandRangeToStartOfLine');
 const getDraftEditorSelectionWithNodes = require('getDraftEditorSelectionWithNodes');
-const getShadowRootIfExistsFromNode = require('getShadowRootIfExistsFromNode');
 const moveSelectionBackward = require('moveSelectionBackward');
 const removeTextWithStrategy = require('removeTextWithStrategy');
 
 function keyCommandBackspaceToStartOfLine(
   editorState: EditorState,
   e: SyntheticKeyboardEvent<HTMLElement>,
+  shadowRootSelector: string | null,
 ): EditorState {
   const afterRemoval = removeTextWithStrategy(
     editorState,
@@ -34,16 +34,20 @@ function keyCommandBackspaceToStartOfLine(
       }
       const {currentTarget} = e;
       const {ownerDocument} = currentTarget;
-      const shadowRoot = getShadowRootIfExistsFromNode(currentTarget);
-      const domSelection: SelectionObject = shadowRoot
-        ? shadowRoot.getSelection()
-        : ownerDocument.defaultView.getSelection();
+      let domSelection;
+      if (shadowRootSelector) {
+        domSelection = document
+          .querySelector(shadowRootSelector)
+          .shadowRoot.getSelection();
+      } else {
+        ownerDocument.defaultView.getSelection();
+      }
       // getRangeAt can technically throw if there's no selection, but we know
       // there is one here because text editor has focus (the cursor is a
       // selection of length 0). Therefore, we don't need to wrap this in a
       // try-catch block.
       let range = domSelection.getRangeAt(0);
-      range = expandRangeToStartOfLine(range);
+      range = expandRangeToStartOfLine(range, shadowRootSelector);
 
       return getDraftEditorSelectionWithNodes(
         strategyState,

@@ -16,11 +16,16 @@ const getSelectionOffsetKeyForNode = require('getSelectionOffsetKeyForNode');
 /**
  * Get the key from the node's nearest offset-aware ancestor.
  */
-function findAncestorOffsetKey(node: Node): ?string {
+function findAncestorOffsetKey(
+  node: Node,
+  shadowRootSelector: string | null,
+): ?string {
   let searchNode = node;
   while (
     searchNode &&
-    searchNode !== getCorrectDocumentOrShadowRootFromNode(node).documentElement
+    searchNode !==
+      getCorrectDocumentOrShadowRootFromNode(node, shadowRootSelector)
+        .documentElement
   ) {
     const key = getSelectionOffsetKeyForNode(searchNode);
     if (key != null) {

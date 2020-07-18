@@ -18,9 +18,12 @@ const EditorState = require('EditorState');
 
 const containsNode = require('containsNode');
 const getActiveElement = require('getActiveElement');
-const getShadowRootIfExistsFromNode = require('getShadowRootIfExistsFromNode');
 
-function editOnBlur(editor: DraftEditor, e: SyntheticEvent<HTMLElement>): void {
+function editOnBlur(
+  editor: DraftEditor,
+  e: SyntheticEvent<HTMLElement>,
+  shadowRootSelector: string | null,
+): void {
   // In a contentEditable element, when you select a range and then click
   // another active element, this does trigger a `blur` event but will not
   // remove the DOM selection from the contenteditable.
@@ -31,17 +34,23 @@ function editOnBlur(editor: DraftEditor, e: SyntheticEvent<HTMLElement>): void {
   // opposed to clicking to another tab or window).
   const {currentTarget} = e;
   const {ownerDocument} = currentTarget;
-  const shadowRoot = getShadowRootIfExistsFromNode(currentTarget);
-  const elementNode = shadowRoot || ownerDocument;
+
+  const elementNode = shadowRootSelector
+    ? document.querySelector(shadowRootSelector).shadowRoot
+    : ownerDocument;
   if (
     // This ESLint rule conflicts with `sketchy-null-bool` flow check
     // eslint-disable-next-line no-extra-boolean-cast
     !Boolean(editor.props.preserveSelectionOnBlur) &&
     getActiveElement(elementNode) === ownerDocument.body
   ) {
-    const selection: SelectionObject = shadowRoot
-      ? shadowRoot.getSelection()
-      : ownerDocument.defaultView.getSelection();
+    let selection: SelectionObject;
+    if (shadowRootSelector) {
+      selection = elementNode.getSelection();
+    } else {
+      selection = ownerDocument.defaultView.getSelection();
+    }
+
     const editorNode = editor.editor;
     if (
       selection.rangeCount === 1 &&

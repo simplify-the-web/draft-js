@@ -135,6 +135,7 @@ class DraftEditorContents extends React.Component<Props> {
       editorState,
       editorKey,
       preventScroll,
+      shadowRootSelector,
       textDirectionality,
     } = this.props;
 
@@ -180,6 +181,7 @@ class DraftEditorContents extends React.Component<Props> {
         offsetKey,
         preventScroll,
         selection,
+        shadowRootSelector,
         tree: editorState.getBlockTree(key),
       };
 

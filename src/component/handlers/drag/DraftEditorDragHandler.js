@@ -32,12 +32,14 @@ const nullthrows = require('nullthrows');
 function getSelectionForEvent(
   event: Object,
   editorState: EditorState,
+  shadowRootSelector: string | null,
 ): ?SelectionState {
   let node: ?Node = null;
   let offset: ?number = null;
 
   const eventTargetDocument = getCorrectDocumentOrShadowRootFromNode(
     event.currentTarget,
+    shadowRootSelector,
   );
   /* $FlowFixMe[prop-missing] (>=0.68.0 site=www,mobile) This comment
    * suppresses an error found when Flow v0.68 was deployed. To see the error
@@ -73,21 +75,30 @@ const DraftEditorDragHandler = {
   /**
    * Drag originating from input terminated.
    */
-  onDragEnd: function(editor: DraftEditor): void {
+  onDragEnd: function(
+    editor: DraftEditor,
+    _,
+    shadowRootSelector: string | null,
+  ): void {
     editor.exitCurrentMode();
-    endDrag(editor);
+    endDrag(editor, shadowRootSelector);
   },
 
   /**
    * Handle data being dropped.
    */
-  onDrop: function(editor: DraftEditor, e: Object): void {
+  onDrop: function(
+    editor: DraftEditor,
+    e: Object,
+    shadowRootSelector: string | null,
+  ): void {
     const data = new DataTransfer(e.nativeEvent.dataTransfer);
 
     const editorState: EditorState = editor._latestEditorState;
     const dropSelection: ?SelectionState = getSelectionForEvent(
       e.nativeEvent,
       editorState,
+      shadowRootSelector,
     );
 
     e.preventDefault();
@@ -136,11 +147,11 @@ const DraftEditorDragHandler = {
         ),
       );
     }
-    endDrag(editor);
+    endDrag(editor, shadowRootSelector);
   },
 };
 
-function endDrag(editor) {
+function endDrag(editor, shadowRootSelector) {
   editor._internalDrag = false;
 
   // Fix issue #1383
@@ -150,7 +161,7 @@ function endDrag(editor) {
   const editorNode = editor.editorContainer;
   if (editorNode) {
     const mouseUpEvent = new MouseEvent('mouseup', {
-      view: getWindowForNode(editorNode),
+      view: getWindowForNode(editorNode, shadowRootSelector),
       bubbles: true,
       cancelable: true,
     });
