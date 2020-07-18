@@ -521,11 +521,11 @@ class DraftEditor extends React.Component<DraftEditorProps, State> {
     // scroll parent and position because window and document can't be queried
     let scrollParent;
     let scrollParentScrollPosition;
-    if (shadowRootSelector) {
-      scrollParent = getShadowRootScrollParent(editorNode, shadowRootSelector);
+    if (shadowRootSelector === null) {
+      scrollParent = Style.getScrollParent(editorNode);
       scrollParentScrollPosition = getScrollPosition(scrollParent);
     } else {
-      scrollParent = Style.getScrollParent(editorNode);
+      scrollParent = getShadowRootScrollParent(editorNode, shadowRootSelector);
       scrollParentScrollPosition = getScrollPosition(scrollParent);
     }
 

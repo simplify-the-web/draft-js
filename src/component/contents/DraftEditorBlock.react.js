@@ -17,6 +17,7 @@ import type {DraftDecoratorComponentProps} from 'DraftDecorator';
 import type {DraftDecoratorType} from 'DraftDecoratorType';
 import type {DraftInlineStyle} from 'DraftInlineStyle';
 import type SelectionState from 'SelectionState';
+import type {ShadowRootSelector} from 'DraftDOMTypes';
 import type {BidiDirection} from 'UnicodeBidiDirection';
 import type {List} from 'immutable';
 
@@ -54,7 +55,7 @@ type Props = {
   selection: SelectionState,
   startIndent?: boolean,
   tree: List<any>,
-  shadowRootSelector: string | null,
+  shadowRootSelector: ShadowRootSelector,
   ...
 };
 
@@ -120,11 +121,11 @@ class DraftEditorBlock extends React.Component<Props> {
     // scroll parent and position because window and document can't be queried
     let scrollParent;
     let scrollParentScrollPosition;
-    if (shadowRootSelector) {
-      scrollParent = getShadowRootScrollParent(blockNode, shadowRootSelector);
+    if (shadowRootSelector === null) {
+      scrollParent = Style.getScrollParent(blockNode);
       scrollParentScrollPosition = getScrollPosition(scrollParent);
     } else {
-      scrollParent = Style.getScrollParent(blockNode);
+      scrollParent = getShadowRootScrollParent(blockNode, shadowRootSelector);
       scrollParentScrollPosition = getScrollPosition(scrollParent);
     }
 

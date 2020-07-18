@@ -12,6 +12,7 @@
 'use strict';
 
 import type DraftEditor from 'DraftEditor.react';
+import type {ShadowRootSelector} from 'DraftDOMTypes';
 
 const DOMObserver = require('DOMObserver');
 const DraftModifier = require('DraftModifier');
@@ -52,7 +53,7 @@ let domObserver = null;
 
 function startDOMObserver(
   editor: DraftEditor,
-  shadowRootSelector: string | null,
+  shadowRootSelector: ShadowRootSelector,
 ) {
   if (!domObserver) {
     domObserver = new DOMObserver(
@@ -71,7 +72,7 @@ const DraftEditorCompositionHandler = {
   onCompositionStart(
     editor: DraftEditor,
     _,
-    shadowRootSelector: string | null,
+    shadowRootSelector: ShadowRootSelector,
   ): void {
     stillComposing = true;
     startDOMObserver(editor, shadowRootSelector);
@@ -153,7 +154,7 @@ const DraftEditorCompositionHandler = {
   resolveComposition(
     editor: DraftEditor,
     _,
-    shadowRootSelector: string | null,
+    shadowRootSelector: ShadowRootSelector,
   ): void {
     if (stillComposing) {
       return;

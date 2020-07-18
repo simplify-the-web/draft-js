@@ -11,7 +11,7 @@
 
 'use strict';
 
-import type {SelectionObject} from 'DraftDOMTypes';
+import type {SelectionObject, ShadowRootSelector} from 'DraftDOMTypes';
 import type SelectionState from 'SelectionState';
 
 const DraftEffects = require('DraftEffects');
@@ -29,6 +29,7 @@ const isIE = UserAgent.isBrowser('IE');
 
 function getAnonymizedDOM(
   node: Node,
+  shadowRootSelector: ShadowRootSelector,
   getNodeLabels?: (n: Node) => Array<string>,
 ): string {
   if (!node) {
@@ -54,7 +55,7 @@ function getAnonymizedDOM(
 
 function anonymizeTextWithin(
   node: Node,
-  shadowRootSelector: string | null,
+  shadowRootSelector: ShadowRootSelector,
   getNodeLabels?: (n: Node) => Array<string>,
 ): Node {
   const labels = getNodeLabels !== undefined ? getNodeLabels(node) : [];
@@ -88,7 +89,7 @@ function anonymizeTextWithin(
 
 function getAnonymizedEditorDOM(
   node: Node,
-  shadowRootSelector: string | null,
+  shadowRootSelector: ShadowRootSelector,
   getNodeLabels?: (n: Node) => Array<string>,
 ): string {
   // grabbing the DOM content of the Draft editor
@@ -128,7 +129,7 @@ function setDraftEditorSelection(
   blockKey: string,
   nodeStart: number,
   nodeEnd: number,
-  shadowRootSelector: string | null,
+  shadowRootSelector: ShadowRootSelector,
 ): void {
   // It's possible that the editor has been removed from the DOM but
   // our selection code doesn't know it yet. Forcing selection in
@@ -272,7 +273,7 @@ function addFocusToSelection(
   node: ?Node,
   offset: number,
   selectionState: SelectionState,
-  shadowRootSelector: string | null,
+  shadowRootSelector: ShadowRootSelector,
 ): void {
   const activeElement = getActiveElement();
   const extend = selection.extend;
@@ -368,7 +369,7 @@ function addPointToSelection(
   node: Node,
   offset: number,
   selectionState: SelectionState,
-  shadowRootSelector: string | null,
+  shadowRootSelector: ShadowRootSelector,
 ): void {
   const range = getCorrectDocumentFromNode(node).createRange();
   // logging to catch bug that is being reported in t16250795

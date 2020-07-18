@@ -9,6 +9,8 @@
  * @emails oncall+draft_js
  */
 
+import type {ShadowRootSelector} from 'DraftDOMTypes';
+
 const UnicodeUtils = require('UnicodeUtils');
 
 const getCorrectDocumentOrShadowRootFromNode = require('getCorrectDocumentOrShadowRootFromNode');
@@ -19,7 +21,7 @@ const invariant = require('invariant');
  */
 function getLineHeightPx(
   element: Element,
-  shadowRootSelector: string | null,
+  shadowRootSelector: ShadowRootSelector,
 ): number {
   const computed = getComputedStyle(element);
   const correctDocument = getCorrectDocumentOrShadowRootFromNode(
@@ -115,7 +117,7 @@ function getNodeLength(node: Node): number {
  */
 function expandRangeToStartOfLine(
   range: Range,
-  shadowRootSelector: string | null,
+  shadowRootSelector: ShadowRootSelector,
 ): Range {
   invariant(
     range.collapsed,

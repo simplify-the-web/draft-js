@@ -11,6 +11,9 @@
 
 'use strict';
 
+import type {ShadowRootSelector} from 'DraftDOMTypes';
+
+const getCorrectDocumentFromNode = require('getCorrectDocumentFromNode');
 const getCorrectDocumentOrShadowRootFromNode = require('getCorrectDocumentOrShadowRootFromNode');
 const getSelectionOffsetKeyForNode = require('getSelectionOffsetKeyForNode');
 /**
@@ -18,9 +21,15 @@ const getSelectionOffsetKeyForNode = require('getSelectionOffsetKeyForNode');
  */
 function findAncestorOffsetKey(
   node: Node,
-  shadowRootSelector: string | null,
+  shadowRootSelector: ?ShadowRootSelector,
 ): ?string {
   let searchNode = node;
+  let rootNode;
+  if (shadowRootSelector) {
+    rootNode = getCorrectDocumentOrShadowRootFromNode(node, shadowRootSelector);
+  } else {
+    rootNode = getCorrectDocumentFromNode(node).documentElement;
+  }
   while (
     searchNode &&
     searchNode !==

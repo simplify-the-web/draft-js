@@ -11,7 +11,7 @@
 
 'use strict';
 
-import type {SelectionObject} from 'DraftDOMTypes';
+import type {SelectionObject, ShadowRootSelector} from 'DraftDOMTypes';
 import type DraftEditor from 'DraftEditor.react';
 
 const DraftModifier = require('DraftModifier');
@@ -21,6 +21,7 @@ const UserAgent = require('UserAgent');
 
 const {notEmptyKey} = require('draftKeyUtils');
 const findAncestorOffsetKey = require('findAncestorOffsetKey');
+const getShadowRootFromSelector = require('getShadowRootFromSelector');
 const keyCommandPlainBackspace = require('keyCommandPlainBackspace');
 const nullthrows = require('nullthrows');
 
@@ -62,7 +63,7 @@ function onInputType(inputType: string, editorState: EditorState): EditorState {
 function editOnInput(
   editor: DraftEditor,
   e: SyntheticInputEvent<>,
-  shadowRootSelector: string | null,
+  shadowRootSelector: ShadowRootSelector,
 ): void {
   if (editor._pendingStateFromBeforeInput !== undefined) {
     editor.update(editor._pendingStateFromBeforeInput);
@@ -70,13 +71,11 @@ function editOnInput(
   }
   // at this point editor is not null for sure (after input)
   const castedEditorElement: HTMLElement = (editor.editor: any);
-  let domSelection;
-  if (shadowRootSelector) {
-    domSelection = document
-      .querySelector(shadowRootSelector)
-      .shadowRoot.getSelection();
+  let domSelection: SelectionObject;
+  if (shadowRootSelector === null) {
+    domSelection = castedEditorElement.ownerDocument.defaultView.getSelection();
   } else {
-    castedEditorElement.ownerDocument.defaultView.getSelection();
+    domSelection = getShadowRootFromSelector(shadowRootSelector).getSelection();
   }
 
   const {anchorNode, isCollapsed} = domSelection;

@@ -9,9 +9,16 @@
  * @emails oncall+draft_js
  */
 
-function getWindowForNode(node: ?Node, shadowRootSelector: string | null): any {
-  if (shadowRootSelector) {
-    return document.querySelector(shadowRootSelector).shadowRoot;
+import type {ShadowRootSelector} from 'DraftDOMTypes';
+
+const getShadowRootFromSelector = require('getShadowRootFromSelector');
+
+function getWindowForNode(
+  node: ?Node,
+  shadowRootSelector: ShadowRootSelector,
+): any {
+  if (shadowRootSelector !== null) {
+    return getShadowRootFromSelector(shadowRootSelector);
   }
   if (!node || !node.ownerDocument || !node.ownerDocument.defaultView) {
     return window;

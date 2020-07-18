@@ -9,12 +9,16 @@
  * @emails oncall+draft_js
  */
 
+import type {ShadowRootSelector} from 'DraftDOMTypes';
+
+const getShadowRootFromSelector = require('getShadowRootFromSelector');
+
 function getCorrectDocumentOrShadowRootFromNode(
   node: ?Node,
-  shadowRootSelector: string | null,
+  shadowRootSelector: ShadowRootSelector,
 ): Node {
-  if (shadowRootSelector) {
-    return document.querySelector(shadowRootSelector).shadowRoot;
+  if (shadowRootSelector != null) {
+    return getShadowRootFromSelector(shadowRootSelector);
   }
   if (!node || !node.ownerDocument) {
     return document;

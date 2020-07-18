@@ -12,6 +12,7 @@
 'use strict';
 
 import type DraftEditor from 'DraftEditor.react';
+import type {ShadowRootSelector} from 'DraftDOMTypes';
 
 const DraftJsDebugLogging = require('DraftJsDebugLogging');
 const EditorState = require('EditorState');
@@ -22,7 +23,7 @@ const getDraftEditorSelection = require('getDraftEditorSelection');
 function editOnSelect(
   editor: DraftEditor,
   _,
-  shadowRootSelector: string | null,
+  shadowRootSelector: ShadowRootSelector,
 ): void {
   if (
     editor._blockSelectEvents ||

@@ -13,6 +13,7 @@
 
 import type DraftEditor from 'DraftEditor.react';
 import type SelectionState from 'SelectionState';
+import type {ShadowRootSelector} from 'DraftDOMTypes';
 
 const DataTransfer = require('DataTransfer');
 const DraftModifier = require('DraftModifier');
@@ -32,7 +33,7 @@ const nullthrows = require('nullthrows');
 function getSelectionForEvent(
   event: Object,
   editorState: EditorState,
-  shadowRootSelector: string | null,
+  shadowRootSelector: ShadowRootSelector,
 ): ?SelectionState {
   let node: ?Node = null;
   let offset: ?number = null;
@@ -78,7 +79,7 @@ const DraftEditorDragHandler = {
   onDragEnd: function(
     editor: DraftEditor,
     _,
-    shadowRootSelector: string | null,
+    shadowRootSelector: ShadowRootSelector,
   ): void {
     editor.exitCurrentMode();
     endDrag(editor, shadowRootSelector);
@@ -90,7 +91,7 @@ const DraftEditorDragHandler = {
   onDrop: function(
     editor: DraftEditor,
     e: Object,
-    shadowRootSelector: string | null,
+    shadowRootSelector: ShadowRootSelector,
   ): void {
     const data = new DataTransfer(e.nativeEvent.dataTransfer);
 

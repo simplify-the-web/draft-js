@@ -12,10 +12,11 @@
 'use strict';
 
 import type {DOMDerivedSelection} from 'DOMDerivedSelection';
-import type {SelectionObject} from 'DraftDOMTypes';
+import type {SelectionObject, ShadowRootSelector} from 'DraftDOMTypes';
 import type EditorState from 'EditorState';
 
 const getDraftEditorSelectionWithNodes = require('getDraftEditorSelectionWithNodes');
+const getShadowRootFromSelector = require('getShadowRootFromSelector');
 
 /**
  * Convert the current selection range to an anchor/focus pair of offset keys
@@ -24,15 +25,13 @@ const getDraftEditorSelectionWithNodes = require('getDraftEditorSelectionWithNod
 function getDraftEditorSelection(
   editorState: EditorState,
   root: HTMLElement,
-  shadowRootSelector: string | null,
+  shadowRootSelector: ShadowRootSelector,
 ): DOMDerivedSelection {
   let selection: SelectionObject;
-  if (shadowRootSelector) {
-    selection = document
-      .querySelector(shadowRootSelector)
-      .shadowRoot.getSelection();
-  } else {
+  if (shadowRootSelector === null) {
     selection = root.ownerDocument.defaultView.getSelection();
+  } else {
+    selection = getShadowRootFromSelector(shadowRootSelector).getSelection();
   }
 
   const {

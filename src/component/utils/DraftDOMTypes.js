@@ -31,3 +31,5 @@ export type SelectionObject = {|
   addRange: (range: Range) => void,
   // ...etc. This is a non-exhaustive definition.
 |};
+
+export type ShadowRootSelector = string | null;

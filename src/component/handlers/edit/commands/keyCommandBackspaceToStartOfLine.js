@@ -11,19 +11,20 @@
 
 'use strict';
 
-import type {SelectionObject} from 'DraftDOMTypes';
+import type {SelectionObject, ShadowRootSelector} from 'DraftDOMTypes';
 
 const EditorState = require('EditorState');
 
 const expandRangeToStartOfLine = require('expandRangeToStartOfLine');
 const getDraftEditorSelectionWithNodes = require('getDraftEditorSelectionWithNodes');
+const getShadowRootFromSelector = require('getShadowRootFromSelector');
 const moveSelectionBackward = require('moveSelectionBackward');
 const removeTextWithStrategy = require('removeTextWithStrategy');
 
 function keyCommandBackspaceToStartOfLine(
   editorState: EditorState,
   e: SyntheticKeyboardEvent<HTMLElement>,
-  shadowRootSelector: string | null,
+  shadowRootSelector: ShadowRootSelector,
 ): EditorState {
   const afterRemoval = removeTextWithStrategy(
     editorState,
@@ -34,13 +35,13 @@ function keyCommandBackspaceToStartOfLine(
       }
       const {currentTarget} = e;
       const {ownerDocument} = currentTarget;
-      let domSelection;
-      if (shadowRootSelector) {
-        domSelection = document
-          .querySelector(shadowRootSelector)
-          .shadowRoot.getSelection();
+      let domSelection: SelectionObject;
+      if (shadowRootSelector === null) {
+        domSelection = ownerDocument.defaultView.getSelection();
       } else {
-        ownerDocument.defaultView.getSelection();
+        domSelection = getShadowRootFromSelector(
+          shadowRootSelector,
+        ).getSelection();
       }
       // getRangeAt can technically throw if there's no selection, but we know
       // there is one here because text editor has focus (the cursor is a

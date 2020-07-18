@@ -21,6 +21,7 @@ import type {DraftInlineStyle} from 'DraftInlineStyle';
 import type {DraftTextAlignment} from 'DraftTextAlignment';
 import type EditorState from 'EditorState';
 import type SelectionState from 'SelectionState';
+import type {ShadowRootSelector} from 'DraftDOMTypes';
 import type {BidiDirection} from 'UnicodeBidiDirection';
 
 export type DraftEditorProps = {
@@ -189,6 +190,6 @@ export type DraftEditorDefaultProps = {
   readOnly: boolean,
   spellCheck: boolean,
   stripPastedStyles: boolean,
-  shadowRootSelector: string | null,
+  shadowRootSelector: ShadowRootSelector,
   ...
 };

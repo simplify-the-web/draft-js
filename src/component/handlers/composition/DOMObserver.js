@@ -11,6 +11,8 @@
 
 'use strict';
 
+import type {ShadowRootSelector} from 'DraftDOMTypes';
+
 const UserAgent = require('UserAgent');
 
 const findAncestorOffsetKey = require('findAncestorOffsetKey');
@@ -47,7 +49,7 @@ class DOMObserver {
     ...
   }) => void;
 
-  constructor(container: HTMLElement, shadowRootSelector: string | null) {
+  constructor(container: HTMLElement, shadowRootSelector: ShadowRootSelector) {
     this.container = container;
     this.mutations = Map();
     const containerWindow = getWindowForNode(container, shadowRootSelector);

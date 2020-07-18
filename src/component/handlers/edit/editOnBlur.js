@@ -11,18 +11,19 @@
 
 'use strict';
 
-import type {SelectionObject} from 'DraftDOMTypes';
+import type {SelectionObject, ShadowRootSelector} from 'DraftDOMTypes';
 import type DraftEditor from 'DraftEditor.react';
 
 const EditorState = require('EditorState');
 
 const containsNode = require('containsNode');
 const getActiveElement = require('getActiveElement');
+const getShadowRootFromSelector = require('getShadowRootFromSelector');
 
 function editOnBlur(
   editor: DraftEditor,
   e: SyntheticEvent<HTMLElement>,
-  shadowRootSelector: string | null,
+  shadowRootSelector: ShadowRootSelector,
 ): void {
   // In a contentEditable element, when you select a range and then click
   // another active element, this does trigger a `blur` event but will not
@@ -36,7 +37,7 @@ function editOnBlur(
   const {ownerDocument} = currentTarget;
 
   const elementNode = shadowRootSelector
-    ? document.querySelector(shadowRootSelector).shadowRoot
+    ? getShadowRootFromSelector(shadowRootSelector)
     : ownerDocument;
   if (
     // This ESLint rule conflicts with `sketchy-null-bool` flow check
@@ -45,10 +46,10 @@ function editOnBlur(
     getActiveElement(elementNode) === ownerDocument.body
   ) {
     let selection: SelectionObject;
-    if (shadowRootSelector) {
-      selection = elementNode.getSelection();
-    } else {
+    if (shadowRootSelector === null) {
       selection = ownerDocument.defaultView.getSelection();
+    } else {
+      selection = elementNode.getSelection();
     }
 
     const editorNode = editor.editor;
