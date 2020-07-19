@@ -275,7 +275,13 @@ function addFocusToSelection(
   selectionState: SelectionState,
   shadowRootSelector: ShadowRootSelector,
 ): void {
-  const activeElement = getActiveElement();
+  // In order to account for the shadow dom, if the active element is equal to
+  // the shadow root element then the active element within the shadow root
+  // should be used
+  let activeElement = getActiveElement();
+  if (activeElement === document.querySelector(shadowRootSelector)) {
+    activeElement = activeElement.shadowRoot.activeElement;
+  }
   const extend = selection.extend;
   // containsNode returns false if node is null.
   // Let's refine the type of this value out here so flow knows.
