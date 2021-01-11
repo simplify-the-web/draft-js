@@ -120,36 +120,43 @@ function editOnKeyDown(
       break;
     case Keys.ESC:
       e.preventDefault();
+      e.stopPropagation();
       if (callDeprecatedHandler('onEscape')) {
         return;
       }
       break;
     case Keys.TAB:
+      e.stopPropagation();
       if (callDeprecatedHandler('onTab')) {
         return;
       }
       break;
     case Keys.UP:
+      e.stopPropagation();
       if (callDeprecatedHandler('onUpArrow')) {
         return;
       }
       break;
     case Keys.RIGHT:
+      e.stopPropagation();
       if (callDeprecatedHandler('onRightArrow')) {
         return;
       }
       break;
     case Keys.DOWN:
+      e.stopPropagation();
       if (callDeprecatedHandler('onDownArrow')) {
         return;
       }
       break;
     case Keys.LEFT:
+      e.stopPropagation();
       if (callDeprecatedHandler('onLeftArrow')) {
         return;
       }
       break;
     case Keys.SPACE:
+      e.stopPropagation();
       // Prevent Chrome on OSX behavior where option + space scrolls.
       if (isChrome && isOptionKeyCommand(e)) {
         e.preventDefault();
@@ -186,6 +193,8 @@ function editOnKeyDown(
   // At this point, we know that we're handling a command of some kind, so
   // we don't want to insert a character following the keydown.
   e.preventDefault();
+  // Also stop propagation so that other website keyboard commands are ignored
+  e.stopPropagation();
 
   // Allow components higher up the tree to handle the command first.
   if (
