@@ -12,6 +12,7 @@
 'use strict';
 
 import type DraftEditor from 'DraftEditor.react';
+import type {ShadowRootSelector} from 'DraftDOMTypes';
 
 const DOMObserver = require('DOMObserver');
 const DraftModifier = require('DraftModifier');
@@ -50,9 +51,15 @@ let resolved = false;
 let stillComposing = false;
 let domObserver = null;
 
-function startDOMObserver(editor: DraftEditor) {
+function startDOMObserver(
+  editor: DraftEditor,
+  shadowRootSelector: ShadowRootSelector,
+) {
   if (!domObserver) {
-    domObserver = new DOMObserver(getContentEditableContainer(editor));
+    domObserver = new DOMObserver(
+      getContentEditableContainer(editor),
+      shadowRootSelector,
+    );
     domObserver.start();
   }
 }
@@ -62,9 +69,13 @@ const DraftEditorCompositionHandler = {
    * A `compositionstart` event has fired while we're still in composition
    * mode. Continue the current composition session to prevent a re-render.
    */
-  onCompositionStart(editor: DraftEditor): void {
+  onCompositionStart(
+    editor: DraftEditor,
+    _,
+    shadowRootSelector: ShadowRootSelector,
+  ): void {
     stillComposing = true;
-    startDOMObserver(editor);
+    startDOMObserver(editor, shadowRootSelector);
   },
 
   /**
@@ -140,7 +151,11 @@ const DraftEditorCompositionHandler = {
    * Resetting innerHTML will move focus to the beginning of the editor,
    * so we update to force it back to the correct place.
    */
-  resolveComposition(editor: DraftEditor): void {
+  resolveComposition(
+    editor: DraftEditor,
+    _,
+    shadowRootSelector: ShadowRootSelector,
+  ): void {
     if (stillComposing) {
       return;
     }
@@ -223,6 +238,7 @@ const DraftEditorCompositionHandler = {
     const documentSelection = getDraftEditorSelection(
       editorState,
       getContentEditableContainer(editor),
+      shadowRootSelector,
     );
     const compositionEndSelectionState = documentSelection.selectionState;
 

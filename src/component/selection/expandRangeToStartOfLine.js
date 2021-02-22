@@ -9,17 +9,25 @@
  * @emails oncall+draft_js
  */
 
+import type {ShadowRootSelector} from 'DraftDOMTypes';
+
 const UnicodeUtils = require('UnicodeUtils');
 
-const getCorrectDocumentFromNode = require('getCorrectDocumentFromNode');
+const getCorrectDocumentOrShadowRootFromNode = require('getCorrectDocumentOrShadowRootFromNode');
 const getRangeClientRects = require('getRangeClientRects');
 const invariant = require('invariant');
 /**
  * Return the computed line height, in pixels, for the provided element.
  */
-function getLineHeightPx(element: Element): number {
+function getLineHeightPx(
+  element: Element,
+  shadowRootSelector: ShadowRootSelector,
+): number {
   const computed = getComputedStyle(element);
-  const correctDocument = getCorrectDocumentFromNode(element);
+  const correctDocument = getCorrectDocumentOrShadowRootFromNode(
+    element,
+    shadowRootSelector,
+  );
   const div = correctDocument.createElement('div');
   div.style.fontFamily = computed.fontFamily;
   div.style.fontSize = computed.fontSize;
@@ -107,7 +115,10 @@ function getNodeLength(node: Node): number {
  * Given a collapsed range, move the start position backwards as far as
  * possible while the range still spans only a single line.
  */
-function expandRangeToStartOfLine(range: Range): Range {
+function expandRangeToStartOfLine(
+  range: Range,
+  shadowRootSelector: ShadowRootSelector,
+): Range {
   invariant(
     range.collapsed,
     'expandRangeToStartOfLine: Provided range is not collapsed.',
@@ -118,7 +129,10 @@ function expandRangeToStartOfLine(range: Range): Range {
   if (containingElement.nodeType !== 1) {
     containingElement = containingElement.parentNode;
   }
-  const lineHeight = getLineHeightPx((containingElement: any));
+  const lineHeight = getLineHeightPx(
+    (containingElement: any),
+    shadowRootSelector,
+  );
 
   // Imagine our text looks like:
   //   <div><span>once upon a time, there was a <em>boy

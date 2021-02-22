@@ -24,12 +24,23 @@ function getSelectionOffsetKeyForNode(node: Node): ?string {
     if (offsetKey) {
       return offsetKey;
     }
-    for (let ii = 0; ii < castedNode.childNodes.length; ii++) {
-      const childOffsetKey = getSelectionOffsetKeyForNode(
-        castedNode.childNodes[ii],
-      );
-      if (childOffsetKey) {
-        return childOffsetKey;
+    if (castedNode.shadowRoot) {
+      for (let ii = 0; ii < castedNode.shadowRoot.childNodes.length; ii++) {
+        const childOffsetKey = getSelectionOffsetKeyForNode(
+          castedNode.shadowRoot.childNodes[ii],
+        );
+        if (childOffsetKey) {
+          return childOffsetKey;
+        }
+      }
+    } else {
+      for (let ii = 0; ii < castedNode.childNodes.length; ii++) {
+        const childOffsetKey = getSelectionOffsetKeyForNode(
+          castedNode.childNodes[ii],
+        );
+        if (childOffsetKey) {
+          return childOffsetKey;
+        }
       }
     }
   }

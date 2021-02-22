@@ -36,11 +36,11 @@ const cx = require('cx');
 const generateRandomKey = require('generateRandomKey');
 const getDefaultKeyBinding = require('getDefaultKeyBinding');
 const getScrollPosition = require('getScrollPosition');
+const getShadowRootScrollParent = require('getShadowRootScrollParent');
 const gkx = require('gkx');
 const invariant = require('invariant');
 const isHTMLElement = require('isHTMLElement');
 const nullthrows = require('nullthrows');
-
 const isIE = UserAgent.isBrowser('IE');
 
 // IE does not support the `input` event on contentEditable, so we can't
@@ -144,6 +144,7 @@ class DraftEditor extends React.Component<DraftEditorProps, State> {
     },
     keyBindingFn: getDefaultKeyBinding,
     readOnly: false,
+    shadowRootSelector: null,
     spellCheck: false,
     stripPastedStyles: false,
   };
@@ -271,9 +272,11 @@ class DraftEditor extends React.Component<DraftEditorProps, State> {
         const method = this._handler && this._handler[eventName];
         if (method) {
           if (flushControlled) {
-            flushControlled(() => method(this, e));
+            flushControlled(() =>
+              method(this, e, this.props.shadowRootSelector),
+            );
           } else {
-            method(this, e);
+            method(this, e, this.props.shadowRootSelector);
           }
         }
       }
@@ -341,6 +344,7 @@ class DraftEditor extends React.Component<DraftEditorProps, State> {
       editorState,
       preventScroll,
       readOnly,
+      shadowRootSelector,
       textAlignment,
       textDirectionality,
     } = this.props;
@@ -382,6 +386,7 @@ class DraftEditor extends React.Component<DraftEditorProps, State> {
       editorKey: this._editorKey,
       editorState,
       preventScroll,
+      shadowRootSelector,
       textDirectionality,
     };
 
@@ -502,7 +507,7 @@ class DraftEditor extends React.Component<DraftEditorProps, State> {
   focus: (scrollPosition?: DraftScrollPosition) => void = (
     scrollPosition?: DraftScrollPosition,
   ): void => {
-    const {editorState} = this.props;
+    const {editorState, shadowRootSelector} = this.props;
     const alreadyHasFocus = editorState.getSelection().getHasFocus();
     const editorNode = this.editor;
 
@@ -512,8 +517,19 @@ class DraftEditor extends React.Component<DraftEditorProps, State> {
       return;
     }
 
-    const scrollParent = Style.getScrollParent(editorNode);
-    const {x, y} = scrollPosition || getScrollPosition(scrollParent);
+    // If shadowRootSelector exists then a different function has to be used for finding
+    // scroll parent and position because window and document can't be queried
+    let scrollParent;
+    let scrollParentScrollPosition;
+    if (shadowRootSelector === null) {
+      scrollParent = Style.getScrollParent(editorNode);
+      scrollParentScrollPosition = getScrollPosition(scrollParent);
+    } else {
+      scrollParent = getShadowRootScrollParent(editorNode, shadowRootSelector);
+      scrollParentScrollPosition = getScrollPosition(scrollParent);
+    }
+
+    const {x, y} = scrollPosition || scrollParentScrollPosition;
 
     invariant(isHTMLElement(editorNode), 'editorNode is not an HTMLElement');
 

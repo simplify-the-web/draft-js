@@ -13,13 +13,14 @@
 
 import type DraftEditor from 'DraftEditor.react';
 import type SelectionState from 'SelectionState';
+import type {ShadowRootSelector} from 'DraftDOMTypes';
 
 const DataTransfer = require('DataTransfer');
 const DraftModifier = require('DraftModifier');
 const EditorState = require('EditorState');
 
 const findAncestorOffsetKey = require('findAncestorOffsetKey');
-const getCorrectDocumentFromNode = require('getCorrectDocumentFromNode');
+const getCorrectDocumentOrShadowRootFromNode = require('getCorrectDocumentOrShadowRootFromNode');
 const getTextContentFromFiles = require('getTextContentFromFiles');
 const getUpdatedSelectionState = require('getUpdatedSelectionState');
 const getWindowForNode = require('getWindowForNode');
@@ -32,11 +33,15 @@ const nullthrows = require('nullthrows');
 function getSelectionForEvent(
   event: Object,
   editorState: EditorState,
+  shadowRootSelector: ShadowRootSelector,
 ): ?SelectionState {
   let node: ?Node = null;
   let offset: ?number = null;
 
-  const eventTargetDocument = getCorrectDocumentFromNode(event.currentTarget);
+  const eventTargetDocument = getCorrectDocumentOrShadowRootFromNode(
+    event.currentTarget,
+    shadowRootSelector,
+  );
   /* $FlowFixMe[prop-missing] (>=0.68.0 site=www,mobile) This comment
    * suppresses an error found when Flow v0.68 was deployed. To see the error
    * delete this comment and run Flow. */
@@ -71,21 +76,30 @@ const DraftEditorDragHandler = {
   /**
    * Drag originating from input terminated.
    */
-  onDragEnd: function(editor: DraftEditor): void {
+  onDragEnd: function(
+    editor: DraftEditor,
+    _,
+    shadowRootSelector: ShadowRootSelector,
+  ): void {
     editor.exitCurrentMode();
-    endDrag(editor);
+    endDrag(editor, shadowRootSelector);
   },
 
   /**
    * Handle data being dropped.
    */
-  onDrop: function(editor: DraftEditor, e: Object): void {
+  onDrop: function(
+    editor: DraftEditor,
+    e: Object,
+    shadowRootSelector: ShadowRootSelector,
+  ): void {
     const data = new DataTransfer(e.nativeEvent.dataTransfer);
 
     const editorState: EditorState = editor._latestEditorState;
     const dropSelection: ?SelectionState = getSelectionForEvent(
       e.nativeEvent,
       editorState,
+      shadowRootSelector,
     );
 
     e.preventDefault();
@@ -134,11 +148,11 @@ const DraftEditorDragHandler = {
         ),
       );
     }
-    endDrag(editor);
+    endDrag(editor, shadowRootSelector);
   },
 };
 
-function endDrag(editor) {
+function endDrag(editor, shadowRootSelector) {
   editor._internalDrag = false;
 
   // Fix issue #1383
@@ -148,7 +162,7 @@ function endDrag(editor) {
   const editorNode = editor.editorContainer;
   if (editorNode) {
     const mouseUpEvent = new MouseEvent('mouseup', {
-      view: getWindowForNode(editorNode),
+      view: getWindowForNode(editorNode, shadowRootSelector),
       bubbles: true,
       cancelable: true,
     });

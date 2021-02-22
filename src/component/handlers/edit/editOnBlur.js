@@ -11,15 +11,20 @@
 
 'use strict';
 
-import type {SelectionObject} from 'DraftDOMTypes';
+import type {SelectionObject, ShadowRootSelector} from 'DraftDOMTypes';
 import type DraftEditor from 'DraftEditor.react';
 
 const EditorState = require('EditorState');
 
 const containsNode = require('containsNode');
 const getActiveElement = require('getActiveElement');
+const getShadowRootFromSelector = require('getShadowRootFromSelector');
 
-function editOnBlur(editor: DraftEditor, e: SyntheticEvent<HTMLElement>): void {
+function editOnBlur(
+  editor: DraftEditor,
+  e: SyntheticEvent<HTMLElement>,
+  shadowRootSelector: ShadowRootSelector,
+): void {
   // In a contentEditable element, when you select a range and then click
   // another active element, this does trigger a `blur` event but will not
   // remove the DOM selection from the contenteditable.
@@ -28,14 +33,25 @@ function editOnBlur(editor: DraftEditor, e: SyntheticEvent<HTMLElement>): void {
   // We therefore force the issue to be certain, checking whether the active
   // element is `body` to force it when blurring occurs within the window (as
   // opposed to clicking to another tab or window).
-  const {ownerDocument} = e.currentTarget;
+  const {currentTarget} = e;
+  const {ownerDocument} = currentTarget;
+
+  const elementNode = shadowRootSelector
+    ? getShadowRootFromSelector(shadowRootSelector)
+    : ownerDocument;
   if (
     // This ESLint rule conflicts with `sketchy-null-bool` flow check
     // eslint-disable-next-line no-extra-boolean-cast
     !Boolean(editor.props.preserveSelectionOnBlur) &&
-    getActiveElement(ownerDocument) === ownerDocument.body
+    getActiveElement(elementNode) === ownerDocument.body
   ) {
-    const selection: SelectionObject = ownerDocument.defaultView.getSelection();
+    let selection: SelectionObject;
+    if (shadowRootSelector === null) {
+      selection = ownerDocument.defaultView.getSelection();
+    } else {
+      selection = elementNode.getSelection();
+    }
+
     const editorNode = editor.editor;
     if (
       selection.rangeCount === 1 &&

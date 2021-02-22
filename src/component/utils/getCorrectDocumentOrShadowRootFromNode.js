@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @format
- * @flow
+ * @flow strict-local
  * @emails oncall+draft_js
  */
 
@@ -13,17 +13,17 @@ import type {ShadowRootSelector} from 'DraftDOMTypes';
 
 const getShadowRootFromSelector = require('getShadowRootFromSelector');
 
-function getWindowForNode(
+function getCorrectDocumentOrShadowRootFromNode(
   node: ?Node,
   shadowRootSelector: ShadowRootSelector,
-): any {
-  if (shadowRootSelector !== null) {
+): Node {
+  if (shadowRootSelector != null) {
     return getShadowRootFromSelector(shadowRootSelector);
   }
-  if (!node || !node.ownerDocument || !node.ownerDocument.defaultView) {
-    return window;
+  if (!node || !node.ownerDocument) {
+    return document;
   }
-  return node.ownerDocument.defaultView;
+  return node.ownerDocument;
 }
 
-module.exports = getWindowForNode;
+module.exports = getCorrectDocumentOrShadowRootFromNode;

@@ -11,18 +11,20 @@
 
 'use strict';
 
-import type {SelectionObject} from 'DraftDOMTypes';
+import type {SelectionObject, ShadowRootSelector} from 'DraftDOMTypes';
 
 const EditorState = require('EditorState');
 
 const expandRangeToStartOfLine = require('expandRangeToStartOfLine');
 const getDraftEditorSelectionWithNodes = require('getDraftEditorSelectionWithNodes');
+const getShadowRootFromSelector = require('getShadowRootFromSelector');
 const moveSelectionBackward = require('moveSelectionBackward');
 const removeTextWithStrategy = require('removeTextWithStrategy');
 
 function keyCommandBackspaceToStartOfLine(
   editorState: EditorState,
   e: SyntheticKeyboardEvent<HTMLElement>,
+  shadowRootSelector: ShadowRootSelector,
 ): EditorState {
   const afterRemoval = removeTextWithStrategy(
     editorState,
@@ -31,14 +33,22 @@ function keyCommandBackspaceToStartOfLine(
       if (selection.isCollapsed() && selection.getAnchorOffset() === 0) {
         return moveSelectionBackward(strategyState, 1);
       }
-      const {ownerDocument} = e.currentTarget;
-      const domSelection: SelectionObject = ownerDocument.defaultView.getSelection();
+      const {currentTarget} = e;
+      const {ownerDocument} = currentTarget;
+      let domSelection: SelectionObject;
+      if (shadowRootSelector === null) {
+        domSelection = ownerDocument.defaultView.getSelection();
+      } else {
+        domSelection = getShadowRootFromSelector(
+          shadowRootSelector,
+        ).getSelection();
+      }
       // getRangeAt can technically throw if there's no selection, but we know
       // there is one here because text editor has focus (the cursor is a
       // selection of length 0). Therefore, we don't need to wrap this in a
       // try-catch block.
       let range = domSelection.getRangeAt(0);
-      range = expandRangeToStartOfLine(range);
+      range = expandRangeToStartOfLine(range, shadowRootSelector);
 
       return getDraftEditorSelectionWithNodes(
         strategyState,
