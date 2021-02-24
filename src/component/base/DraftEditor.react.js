@@ -149,6 +149,8 @@ class DraftEditor extends React.Component<DraftEditorProps, State> {
     stripPastedStyles: false,
   };
 
+  mouseUpListener: Function;
+
   _blockSelectEvents: boolean;
   _clipboard: ?BlockMap;
   _handler: ?Object;
@@ -200,6 +202,10 @@ class DraftEditor extends React.Component<DraftEditorProps, State> {
 
   constructor(props: DraftEditorProps) {
     super(props);
+
+    // Optional event listener attached to window to listen for mouse up events
+    // outside of the shadow-dom and behave appropriately.
+    this.mouseUpListener = null;
 
     this._blockSelectEvents = false;
     this._clipboard = null;
@@ -471,6 +477,13 @@ class DraftEditor extends React.Component<DraftEditorProps, State> {
     }
     this.setMode('edit');
 
+    if (this.props.shadowRootSelector) {
+      // Attaches event listener to window outside of document to listen for
+      // events triggered outside of shadow-dom. This prevents the double click
+      // behavior to focus on the draft editor component.
+      this.mouseUpListener = window.addEventListener('mouseup', this._onMouseUp);
+    }
+
     /**
      * IE has a hardcoded "feature" that attempts to convert link text into
      * anchors in contentEditable DOM. This breaks the editor's expectations of
@@ -493,6 +506,15 @@ class DraftEditor extends React.Component<DraftEditorProps, State> {
     this._blockSelectEvents = false;
     this._latestEditorState = this.props.editorState;
     this._latestCommittedEditorState = this.props.editorState;
+  }
+
+  componentWillUnmount(): void {
+    // Removes event listener for 'mouseup' event from window when the
+    // shadow-dom is utilized.
+    if (this.props.shadowRootSelector && this.mouseUpListener) {
+      window.removeEventListener('mouseup', this._onMouseUp);
+      this.mouseUpListener = null;
+    }
   }
 
   /**
