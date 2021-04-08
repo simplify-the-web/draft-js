@@ -149,8 +149,6 @@ class DraftEditor extends React.Component<DraftEditorProps, State> {
     stripPastedStyles: false,
   };
 
-  mouseUpListener: Function;
-
   _blockSelectEvents: boolean;
   _clipboard: ?BlockMap;
   _handler: ?Object;
@@ -205,7 +203,7 @@ class DraftEditor extends React.Component<DraftEditorProps, State> {
 
     // Optional event listener attached to window to listen for mouse up events
     // outside of the shadow-dom and behave appropriately.
-    this.mouseUpListener = null;
+    this._mouseUpListener = null;
 
     this._blockSelectEvents = false;
     this._clipboard = null;
@@ -481,7 +479,7 @@ class DraftEditor extends React.Component<DraftEditorProps, State> {
       // Attaches event listener to window outside of document to listen for
       // events triggered outside of shadow-dom. This prevents the double click
       // behavior to focus on the draft editor component.
-      this.mouseUpListener = window.addEventListener('mouseup', this._onMouseUp);
+      window.addEventListener('mouseup', this._onMouseUp);
     }
 
     /**
@@ -511,9 +509,8 @@ class DraftEditor extends React.Component<DraftEditorProps, State> {
   componentWillUnmount(): void {
     // Removes event listener for 'mouseup' event from window when the
     // shadow-dom is utilized.
-    if (this.props.shadowRootSelector && this.mouseUpListener) {
+    if (this.props.shadowRootSelector) {
       window.removeEventListener('mouseup', this._onMouseUp);
-      this.mouseUpListener = null;
     }
   }
 
