@@ -549,6 +549,7 @@ class DraftEditor extends React.Component<DraftEditorProps, State> {
     }
 
     const {x, y} = scrollPosition || scrollParentScrollPosition;
+
     invariant(isHTMLElement(editorNode), 'editorNode is not an HTMLElement');
 
     editorNode.focus();
